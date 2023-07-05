@@ -75,6 +75,18 @@
                                             <td><strong>Subtotal</strong></td>
                                             <td>₹{{ order.get_subtotal }}</td>
                                         </tr>
+
+                                        {% if order.coupon %}
+                                            <tr>
+                                                <td><strong>Coupon Discount</strong></td>
+                                                {% if order.coupon.discount.is_percentage %}
+                                                <td>{{ order.coupon.discount }}</td>
+                                                {% else %}
+                                                <td>₹{{ order.coupon.discount }}</td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endif %}
+
                                         <tr>
                                             <td><strong class="text-black font-weight-bold">Order Total</strong></td>
                                             <td>

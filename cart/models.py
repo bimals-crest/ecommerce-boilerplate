@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.shortcuts import reverse
 from django.utils.text import slugify
+from coupon_management.models import Coupon
 
 User = get_user_model()
 
@@ -118,6 +119,7 @@ class Order(models.Model):
         Address, related_name='billing_address', blank=True, null=True, on_delete=models.SET_NULL)
     shipping_address = models.ForeignKey(
         Address, related_name='shipping_address', blank=True, null=True, on_delete=models.SET_NULL)
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.reference_number
@@ -133,11 +135,17 @@ class Order(models.Model):
         return total
 
     def get_subtotal(self):
+
         subtotal = self.get_raw_subtotal()
         return "{:.2f}".format(subtotal / 100)
 
     def get_raw_total(self):
-        subtotal = self.get_raw_subtotal()
+
+        if self.coupon:
+            coupon = self.coupon
+            subtotal = coupon.get_discounted_value(initial_value=self.get_raw_subtotal())
+        else:
+            subtotal = self.get_raw_subtotal()
         # add tax, add delivery, subtract discounts
         # total = subtotal - discounts + tax + delivery
         return subtotal

@@ -110,10 +110,54 @@
                                 <strong class="text-black">₹{{ order.get_subtotal }}</strong>
                             </div>
                         </div>
+                        
+                        {% if order.coupon %}
+                        <div class="row mb-5">
+                            <div class="col-md-6">
+                                <span class="text-black">Coupon Code</span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <strong class="text-black">{{ order.coupon.code }}</strong>
+                            </div>
+                        
+                            <div class="col-md-6">
+                                <span class="text-black">Discount</span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                {% if order.coupon.discount.is_percentage %}
+                                <strong class="text-black">{{ order.coupon.discount }}</strong>
+                                {% else %}
+                                <strong class="text-black">₹{{ order.coupon.discount }}</strong>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-12 text-right">
+                            <a href="{% url 'cart:remove-coupon' order.id %}"
+                                class="button">
+                                Remove Coupon
+                            </a>
+                            </div>
+                        </div>
+
+                        {% else %}
+
+                            <div class="coupon-apply">
+
+                                <input type="text" class="form-control text-center" id="code" value="">
+
+                                <div class="input-group-append">
+                                    <a href="{% url 'cart:add-coupon' order.id %}?coupon_code="
+                                        class="button">
+                                        Apply Coupon
+                                    </a>
+                                </div>
+
+                            </div>
+
+                        {% endif %}
 
                         <div class="row mb-5">
                             <div class="col-md-6">
-                                <span class="text-black">Total</span>
+                                <span class="text-black"><strong>Total</strong></span>
                             </div>
                             <div class="col-md-6 text-right">
                                 <strong class="text-black">₹{{ order.get_total }}</strong>

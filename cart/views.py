@@ -2,6 +2,7 @@ from django.http import HttpResponse
 import datetime
 import json
 import stripe
+from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,9 +15,11 @@ from django.views.decorators.csrf import csrf_exempt
 from .forms import AddToCartForm, AddressForm, StripePaymentForm
 from .models import Product, OrderItem, Address, Payment, Order, Category, StripePayment
 from .utils import get_or_set_order_session
+from coupon_management.validations import validate_coupon
+from coupon_management.models import Coupon, CouponUser
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-
+User = get_user_model()
 
 class ProductListView(generic.ListView):
     template_name = 'cart/product_list.html'
@@ -97,6 +100,41 @@ class IncreaseQuantityView(generic.View):
         order_item.save()
         return redirect("cart:summary")
 
+
+class CouponValidate(generic.View):
+    def get(self, request, *args, **kwargs):
+        coupon_code = request.GET.get("coupon_code")
+        user = User.objects.get(username=request.user.username)
+        status = validate_coupon(coupon_code=coupon_code, user=user)
+        order_item = get_object_or_404(Order, id=kwargs['pk'])
+
+        print(order_item)
+        print(status)
+
+        if status['valid']:
+            coupon = Coupon.objects.get(code=coupon_code)
+            coupon.use_coupon(user=user)
+
+            order_item.coupon = coupon
+            order_item.save()
+            return redirect("cart:summary")
+        else:
+            print("Coupon Code Invalid")
+            return redirect("cart:summary")
+
+class CouponRemove(generic.View):
+    def get(self, request, *args, **kwargs):
+
+        user = User.objects.get(username=request.user.username)
+        order_item = get_object_or_404(Order, id=kwargs['pk'])
+
+        coupon = CouponUser.objects.get(coupon=order_item.coupon, user=user)
+        coupon.delete()
+        
+        order_item.coupon = None
+        order_item.save()
+
+        return redirect("cart:summary")
 
 class DecreaseQuantityView(generic.View):
     def get(self, request, *args, **kwargs):

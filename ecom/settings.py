@@ -37,7 +37,9 @@ INSTALLED_APPS = [
 
     'cart',
     'core',
-    'staff'
+    'staff',
+
+    'coupon_management'
 ]
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
