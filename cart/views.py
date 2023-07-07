@@ -100,16 +100,37 @@ class IncreaseQuantityView(generic.View):
         order_item.save()
         return redirect("cart:summary")
 
-
 class CouponValidate(generic.View):
     def get(self, request, *args, **kwargs):
+        try:
+            coupon_code = request.GET.get("coupon_code")
+            user = User.objects.get(username=request.user.username)
+            status = validate_coupon(coupon_code=coupon_code, user=user)
+
+            if status['valid']:
+                return JsonResponse({
+                    "status" : "valid"
+                })
+            else:
+                return JsonResponse({
+                    "status" : "invalid",
+                    "details" : status['valid']
+                })
+        except Exception as e:
+            print(e)
+            return JsonResponse({
+                    "status" : "error",
+                    "error" : str(e)
+                })
+
+
+class CouponApply(generic.View):
+    def get(self, request, *args, **kwargs):
         coupon_code = request.GET.get("coupon_code")
+        order_id = request.GET.get("order_id")
         user = User.objects.get(username=request.user.username)
         status = validate_coupon(coupon_code=coupon_code, user=user)
-        order_item = get_object_or_404(Order, id=kwargs['pk'])
-
-        print(order_item)
-        print(status)
+        order_item = get_object_or_404(Order, id=order_id)
 
         if status['valid']:
             coupon = Coupon.objects.get(code=coupon_code)
@@ -119,7 +140,6 @@ class CouponValidate(generic.View):
             order_item.save()
             return redirect("cart:summary")
         else:
-            print("Coupon Code Invalid")
             return redirect("cart:summary")
 
 class CouponRemove(generic.View):
@@ -233,7 +253,7 @@ class StripePaymentView(LoginRequiredMixin, generic.FormView):
             try:
                 order = get_or_set_order_session(self.request)
                 payment_intent = stripe.PaymentIntent.create(
-                    amount=order.get_raw_total(),
+                    amount=int(order.get_raw_total()),
                     currency='inr',
                     customer=self.request.user.customer.stripe_customer_id,
                     payment_method=payment_method,
@@ -266,7 +286,7 @@ class StripePaymentView(LoginRequiredMixin, generic.FormView):
         order = get_or_set_order_session(self.request)
 
         payment_intent = stripe.PaymentIntent.create(
-            amount=order.get_raw_total(),
+            amount=int(order.get_raw_total()),
             currency='inr',
             customer=user.customer.stripe_customer_id,
         )
