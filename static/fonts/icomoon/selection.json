@@ -8312,15 +8312,15 @@
         "isMulticolor": false,
         "isMulticolor2": false,
         "tags": [
-          "dollar",
-          "usd"
+          "rupee",
+          "inr"
         ],
         "defaultCode": 61781,
         "grid": 14
       },
       "attrs": [],
       "properties": {
-        "name": "dollar, usd",
+        "name": "inr, rupee",
         "id": 306,
         "order": 1162,
         "prevSize": 28,

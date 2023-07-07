@@ -4,9 +4,15 @@ from .models import (
     OrderItem, ColourVariation, Product, SizeVariation,
     Address
 )
+from coupon_management.models import Coupon
 
 User = get_user_model()
 
+class ApplyCouponForm(forms.ModelForm):
+    code = forms.CharField()
+    class Meta:
+        model = Coupon
+        fields = ('code',)
 
 class AddToCartForm(forms.ModelForm):
     colour = forms.ModelChoiceField(queryset=ColourVariation.objects.none())

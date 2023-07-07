@@ -110,10 +110,53 @@
                                 <strong class="text-black">₹{{ order.get_subtotal }}</strong>
                             </div>
                         </div>
+                        
+                        {% if order.coupon %}
+                        <div class="row mb-5">
+                            <div class="col-md-6">
+                                <span class="text-black">Coupon Code</span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <strong class="text-black">{{ order.coupon.code }}</strong>
+                            </div>
+                        
+                            <div class="col-md-6">
+                                <span class="text-black">Discount</span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                {% if order.coupon.discount.is_percentage %}
+                                <strong class="text-black">{{ order.coupon.discount }}</strong>
+                                {% else %}
+                                <strong class="text-black">₹{{ order.coupon.discount }}</strong>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-12 text-right">
+                            <a href="{% url 'cart:remove-coupon' order.id %}"
+                                class="button">
+                                Remove Coupon
+                            </a>
+                            </div>
+                        </div>
+
+                        {% else %}
+
+                            <div class="coupon-apply">
+
+                                <input type="text" class="form-control text-center" id="code" value="">
+
+                                <div class="input-group-append">
+                                    <div class="button" onclick="validate_coupon('{{ order.id }}')">
+                                        Apply Coupon
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        {% endif %}
 
                         <div class="row mb-5">
                             <div class="col-md-6">
-                                <span class="text-black">Total</span>
+                                <span class="text-black"><strong>Total</strong></span>
                             </div>
                             <div class="col-md-6 text-right">
                                 <strong class="text-black">₹{{ order.get_total }}</strong>
@@ -135,5 +178,37 @@
 
     </div>
 </div>
+<script>
+
+    async function validate_coupon(order_id){
+        var original_link = `{% url 'cart:validate-coupon' %}`;
+        console.log(original_link)
+        $('#code.button').attr('href', original_link);
+        code = document.getElementById("code").value;
+        var new_href = original_link + '?coupon_code=' + code;
+        
+        const response = await fetch(new_href);
+        const data = await response.json();
+        console.log(data.status)
+        if (data.status === "valid"){
+            coupon(order_id)
+            setTimeout(()=>{
+                window.location.reload()
+            },2)
+        }
+        else if (data.status === "invalid"){
+            alert("Coupon Invalid")
+        }
+    }
+
+    function coupon(order_id){
+
+        var original_link = "{% url 'cart:add-coupon' %}";
+        $('#code.button').attr('href', original_link);
+        code = document.getElementById("code").value;
+        var new_href = original_link + '?coupon_code=' + code + '&order_id='+order_id;
+        const response = fetch(new_href);
+    }
+</script>
 
 {% endblock content %}
